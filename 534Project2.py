@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2
 # author Yichen Wang
-
+MIN_MATCH_COUNT = 100
 sift=cv2.xfeatures2d.SIFT_create()
 
 """
@@ -26,25 +26,23 @@ CATEGORIES=["eiffel"]
 for category in CATEGORIES:
     path = os.path.join(DATADIR,category)
     for imgindex in os.listdir(path):
-        img=cv2.imread(os.path.join(path,imgindex))
-        gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+        img2=cv2.imread(os.path.join(path,imgindex),0)
 
         """
         I decide to use local features, SIFT
         """
-        kp2, des2 = sift.detectAndCompute(gray, None)
-        bf=cv2.BFMatcher(cv2.NORM_L1,crossCheck=True)
-        #Match descriptors
-        matches = bf.match(des1,des2)
-        #Sort them in order of their distance
-        matches = sorted(matches, key=lambda x: x.distance)
-        # Draw first 100 matches.
-        img3 = cv2.drawMatches(sgray, kp1, gray, kp2, matches[:100],None, flags=2)
+        kp2, des2 = sift.detectAndCompute(img2, None)
 
+        # BFMatcher with default params
+        bf = cv2.BFMatcher()
+        matches = bf.knnMatch(des1, des2, k=2)
+        good = []
+        for m, n in matches:
+            if m.distance < 0.75 * n.distance:
+                good.append([m])
+        img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None,flags=2)
 
-
-        #kp=sift.detect(gray,None)
-        #img=cv2.drawKeypoints(gray,kp,img)
+        #plt.imshow(img3, 'gray'), plt.show()
         cv2.imshow("sift_image", img3)
         cv2.waitKey(600)
 
