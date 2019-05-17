@@ -14,9 +14,10 @@ c=0
 1. import sample image
 This part is import the sample image,get its SIFT
 """
-img1 = cv2.imread("/Users/saber/Desktop/03.jpg",0)
-kp1, des1 = sift.detectAndCompute(img1,None)
-
+img1 = cv2.imread("/Users/saber/Desktop/5.jpg",0)
+h1,w1=img1.shape
+img1=cv2.resize(img1,(int(w1/2),int(h1/2)),interpolation=cv2.INTER_CUBIC)
+kp1, des1 = sift.detectAndCompute(img1, None)
 
 """
 2. go through all images in the folder
@@ -25,8 +26,8 @@ I set DATADIR to be the path to the folder "paris"
 And then convert the RGB images into GRAY as the GRAY has smaller size
 """
 DATADIR="/Users/saber/Desktop/534A2/paris"
-#CATEGORIES=["defense","eiffel","general","invalides","moulinrouge","museedorsay","notredame","pantheon","pompidou","sacrecoeur","triomphe","louvre"]
-CATEGORIES=["defense","eiffel"]
+CATEGORIES=["defense","eiffel","general","invalides","louvre","moulinrouge","museedorsay","notredame","pantheon","pompidou","sacrecoeur","triomphe"]
+#CATEGORIES=["invalides","louvre"]
 
 for i in range(0,len(CATEGORIES)):
     category=CATEGORIES[i]#......
@@ -40,10 +41,12 @@ for i in range(0,len(CATEGORIES)):
 
         if img2 is not None:
             #print(img1.dtype, img2.dtype)
+            h2, w2 = img2.shape
+            img2 = cv2.resize(img2, (int(w2 / 2), int(h2 / 2)), interpolation=cv2.INTER_CUBIC)
             """
-                    3. image representation
-                    I decide to use local features, SIFT
-                    """
+            3. image representation
+            I decide to use local features, SIFT
+            """
             kp2, des2 = sift.detectAndCompute(img2, None)
 
             """
@@ -51,43 +54,45 @@ for i in range(0,len(CATEGORIES)):
             Then use Brute-Force Matching to get k best matches, I set k=2.
             """
             bf = cv2.BFMatcher()
-            matches = bf.knnMatch(des1, des2, k=2)
-            good = []
-            for m, n in matches:
-                if m.distance < 0.75 * n.distance:
-                    good.append([m])
-
-            """
-            5.draw rectangle
-            "good" is a list, and it contains the matched key points in img2.
-            use list p to save the (x,y), get the largest and smallest x-coordinate, 
-            the largest and smallest y-coordinate, then we can get the four points of rectangle.    
-            """
-            if (len(good) >= 15):
-                p = []
-                for n in good:
-                    idx = n[0].trainIdx
-                    (x, y) = kp2[idx].pt
-                    p.append((x, y))
-
-                max_x = max(p, key=lambda x: x[0])[0]
-                min_x = min(p, key=lambda x: x[0])[0]
-                max_y = max(p, key=lambda x: x[1])[1]
-                min_y = min(p, key=lambda x: x[1])[1]
-
-                # cv2.rectangle(img2, (int(min_x), int(min_y)), (int(max_x), int(max_y)), (255, 0, 0), 5)
-                # cv2.imshow(str(c),img2)
-                c += 1
-                if (i == 0):
-                    count1 += 1
-                else:
-                    count2 += 1
+            if des2 is not None and len(des2)!=0:
+                matches = bf.knnMatch(des1, des2, k=2)
+                good = []
+                for m, n in matches:
+                    if m.distance < 0.75 * n.distance:
+                        good.append([m])
 
                 """
-                6. ranking
-                j is the image's index in the folder
+                5.draw rectangle
+                "good" is a list, and it contains the matched key points in img2.
+                use list p to save the (x,y), get the largest and smallest x-coordinate, 
+                the largest and smallest y-coordinate, then we can get the four points of rectangle.    
+                """
+                #print(category,len(good))
+                if (len(good) >= 15):
+                    p = []
+                    for n in good:
+                        idx = n[0].trainIdx
+                        (x, y) = kp2[idx].pt
+                        p.append((x, y))
+
+                    max_x = max(p, key=lambda x: x[0])[0]
+                    min_x = min(p, key=lambda x: x[0])[0]
+                    max_y = max(p, key=lambda x: x[1])[1]
+                    min_y = min(p, key=lambda x: x[1])[1]
+
+                    # cv2.rectangle(img2, (int(min_x), int(min_y)), (int(max_x), int(max_y)), (255, 0, 0), 5)
+                    # cv2.imshow(str(c),img2)
+                    c += 1
+                    if (i == 3):
+                        count1 += 1
+                    else:
+                        count2 += 1
+
                     """
-                l.append((len(good), j, [(int(min_x), int(min_y)), (int(max_x), int(max_y))], i))
+                    6. ranking
+                    j is the image's index in the folder
+                        """
+                    l.append((len(good), j, [(int(min_x), int(min_y)), (int(max_x), int(max_y))], i))
 
 
 
@@ -102,8 +107,9 @@ for i in range(0,len(CATEGORIES)):
 """
 
 l.sort()
+l=l[::-1]
 if len(l) > 10:
-    l = l[-10:]
+    l = l[0:10]
 a=1
 for m in l:
     #print(m)
@@ -115,6 +121,8 @@ for m in l:
 
     imgindex = (os.listdir(path))[img_idx]
     img = cv2.imread(os.path.join(path, imgindex))
+    h, w,g = img.shape
+    img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
 
     left_top=m[2][0]
     right_bottom=m[2][1]
