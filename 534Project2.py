@@ -12,7 +12,7 @@ l=[]
 1. import sample image
 This part is import the sample image,get its SIFT
 """
-img1 = cv2.imread("/Users/saber/Desktop/02.jpg",0)
+img1 = cv2.imread("/Users/saber/Desktop/04.jpg",0)
 kp1, des1 = sift.detectAndCompute(img1,None)
 
 
@@ -23,9 +23,9 @@ I set DATADIR to be the path to the folder "paris"
 And then convert the RGB images into GRAY as the GRAY has smaller size
 """
 DATADIR="/Users/saber/Desktop/534A2/paris"
-CATEGORIES=["invalides"]
+CATEGORIES=["defense","eiffel","general","invalides","louvre","moulinrouge","museedorsay","notredame","pantheon","pompidou","sacrecoeur","triomphe"]
 
-for i in range(0,len(CATEGORIES)):
+for i in range(1,len(CATEGORIES)):
     category=CATEGORIES[i]
     path = os.path.join(DATADIR,category)
     #for imgindex in os.listdir(path):
@@ -50,37 +50,65 @@ for i in range(0,len(CATEGORIES)):
             if m.distance < 0.75 * n.distance:
                 good.append([m])
 
+
         """
-        5. ranking
-        j is the image's index in the folder
+        5.draw rectangle
+        "good" is a list, and it contains the matched key points in img2.
+        use list p to save the (x,y), get the largest and smallest x-coordinate, 
+        the largest and smallest y-coordinate, then we can get the four points of rectangle.    
         """
-        l.append([len(good),j])
+        if (len(good)>=2):
+            p = []
+            for n in good:
+                idx = n[0].trainIdx
+                (x, y) = kp2[idx].pt
+                p.append((x, y))
 
-        for n in good:
-            idx=n[0].trainIdx
-            (x,y)=kp2[idx].pt
-            print(x,y)
+            max_x = max(p, key=lambda x: x[0])[0]
+            min_x = min(p, key=lambda x: x[0])[0]
+            max_y = max(p, key=lambda x: x[1])[1]
+            min_y = min(p, key=lambda x: x[1])[1]
 
+            #cv2.rectangle(img, (int(min_x), int(min_y)), (int(max_x), int(max_y)), (255, 0, 0), 5)
 
+            """
+            6. ranking
+            j is the image's index in the folder
+            """
+            l.append((len(good), j,[(int(min_x), int(min_y)), (int(max_x), int(max_y))]))
+            #l.append((len(good),img))
         #print("good=",len(good))
         #img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None,flags=2)
-        #cv2.imshow("sift_image", img3)
-        #cv2.waitKey(6000)
-        break
+        #cv2.imshow("sift_image", img)
+        #cv2.waitKey(600)
+        #break
+
+    """
+    5. ranking
+        5-1 sort the list l
+        5-2 select first 10 elements in l
+    """
+    l.sort()
+    if len(l) > 10:
+        l = l[-10:]
+    a=1
+    for m in l:
+        #print(m)
+        j=m[1]
+        imgindex = (os.listdir(path))[j]
+        img = cv2.imread(os.path.join(path, imgindex))
+        left_top=m[2][0]
+        right_bottom=m[2][1]
+
+        cv2.rectangle(img,left_top,right_bottom,(255,0,0),5)
+        cv2.imshow(str(a), img)
+        a+=1
+        #cv2.waitKey(1200)
+
+
+
     break
-
-"""
-5. ranking
-    5-1 sort the list l
-    5-2 select first 10 elements in l
-"""
-l.sort(reverse = True)
-newl=[]
-#for m in range (0,10):
-    #newl.append(l[m])
-
-
-
+cv2.waitKey()
 cv2.destroyAllWindows()
 
 
