@@ -4,17 +4,17 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
 import cv2
+import time
 # author Yichen Wang
 sift=cv2.xfeatures2d.SIFT_create()
 l=[]
 count1=0
-count2=0
-c=0
+starttime=time.time()
 """
 1. import sample image
 This part is import the sample image,get its SIFT
 """
-img1 = cv2.imread("/Users/saber/Desktop/5.jpg",0)
+img1 = cv2.imread("/Users/saber/Desktop/01.jpg",0)
 h1,w1=img1.shape
 img1=cv2.resize(img1,(int(w1/2),int(h1/2)),interpolation=cv2.INTER_CUBIC)
 kp1, des1 = sift.detectAndCompute(img1, None)
@@ -30,10 +30,12 @@ CATEGORIES=["defense","eiffel","general","invalides","louvre","moulinrouge","mus
 #CATEGORIES=["invalides","louvre"]
 
 for i in range(0,len(CATEGORIES)):
+    count2=count1
     category=CATEGORIES[i]#......
     path = os.path.join(DATADIR,category)
+    folder_size=len(os.listdir(path))
     #for imgindex in os.listdir(path):
-    print("Let's check "+CATEGORIES[i]+" folder, it has "+str(len(os.listdir(path)))+" images")
+    #print("Let's check "+CATEGORIES[i]+" folder, it has "+str(len(os.listdir(path)))+" images")
     #for imgindex in os.listdir(path):
     for j in range(0,len(os.listdir(path))):
         imgindex=(os.listdir(path))[j]
@@ -82,11 +84,7 @@ for i in range(0,len(CATEGORIES)):
 
                     # cv2.rectangle(img2, (int(min_x), int(min_y)), (int(max_x), int(max_y)), (255, 0, 0), 5)
                     # cv2.imshow(str(c),img2)
-                    c += 1
-                    if (i == 3):
-                        count1 += 1
-                    else:
-                        count2 += 1
+                    count1+=1
 
                     """
                     6. ranking
@@ -95,8 +93,8 @@ for i in range(0,len(CATEGORIES)):
                     l.append((len(good), j, [(int(min_x), int(min_y)), (int(max_x), int(max_y))], i))
 
 
+    print 'In %d th class it has %d images, gets %d images contains sample images' % (i, folder_size, count1-count2)
 
-    print('in correct class = ', count1, ' in wrong class = ', count2)
     #break
 
 
@@ -132,7 +130,8 @@ for m in l:
     a+=1
     #cv2.waitKey(1200)
 
-print('SUMMARY: in correct class = ', count1, ' in wrong class = ', count2)
+endtime=time.time()
+print 'Finish in %d seconds' %(endtime-starttime)
 cv2.waitKey()
 cv2.destroyAllWindows()
 
